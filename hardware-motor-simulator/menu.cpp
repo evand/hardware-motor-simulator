@@ -33,8 +33,8 @@ const char * const menu_table[] PROGMEM = {
 /*
  * Here are the menu state actions
  */
-extern void (*full_run_state)(bool);
-extern void (*spark_test_state)(bool);
+extern void full_run_state(bool);
+extern void spark_test_state(bool);
 
 void (*menu_state_functions[])(bool) = {
 	full_run_state,
