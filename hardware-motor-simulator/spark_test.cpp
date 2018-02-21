@@ -45,7 +45,7 @@ void spark_test_state(bool first_time) {
 	next_update_time = loop_time + update_period;
 
 	lcd.setCursor(2, 17);
-	lcd.print(input_spark_sense? "PRESENT": "ABSENT");
+	lcd.print(input_spark_sense? "PRESENT": "ABSENT ");
 
 	lcd.setCursor(3, 17);
 	lcd.print(input_spark_sense_A);

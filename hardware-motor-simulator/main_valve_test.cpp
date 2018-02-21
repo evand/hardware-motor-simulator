@@ -1,7 +1,8 @@
 /*
- * Test routine for ig valve input.
+ * Test routine for main valve input.
  *
- * This routine prints both ig valve states on LCD
+ * This routine prints both main valve states on LCD.
+ * For now, this status is the raw pulse width in microseconds.
  * Updates are limited to 10 per second, to avoid flickering.
  */
 
@@ -17,12 +18,15 @@ static unsigned long next_update_time;
 extern unsigned long loop_time;
 static unsigned long const update_period = 100;
 
-void ig_valve_test_state(bool first_time) {
+void main_valve_test_state(bool first_time) {
+	int vipa, vn2o;
+	int dipa, dn2o;
+
 /*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
 	if (first_time) {
 		lcd.clear();
 		lcd.setCursor(0, 3);
-		lcd.print("Ig Valve Test");
+		lcd.print("Main Valve Test");
 		lcd.setCursor(2, 3);
 		lcd.print("IPA Valve:");
 		lcd.setCursor(3, 3);
@@ -44,9 +48,31 @@ void ig_valve_test_state(bool first_time) {
 	// schedule next update.
 	next_update_time = loop_time + update_period;
 
+	// get the data.  Must disable interrupts.
+	noInterrupts();
+	vipa = input_ipa_servo;
+	vn2o = input_n2o_servo;
+	interrupts();
+	dipa = servo_read_ipa();
+	dn2o = servo_read_n2o();
+
 	lcd.setCursor(2, 15);
-	lcd.print(input_ig_valve_ipa_level? "OPEN  ": "CLOSED");
+	lcd.print("            ");
+	lcd.setCursor(2, 15);
+	if (dipa == -1) 
+		lcd.print("OFF");
+	else if (dipa < 0 && dipa != -2)
+		lcd.print("unknown err");
+	else
+		lcd.print(vipa);
 
 	lcd.setCursor(3, 15);
-	lcd.print(input_ig_valve_n2o_level? "OPEN  ": "CLOSED");
+	lcd.print("            ");
+	lcd.setCursor(3, 15);
+	if (dn2o == -1) 
+		lcd.print("OFF");
+	else if (dn2o < 0 && dn2o != -2)
+		lcd.print("unknown err");
+	else
+		lcd.print(vn2o);
 }
