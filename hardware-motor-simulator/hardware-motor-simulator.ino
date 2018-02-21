@@ -25,6 +25,7 @@ const int backlight = 6;
 unsigned long loop_time;
 
 extern void input_setup();
+extern void output_setup();
 extern void full_run_init();
 extern void spark_test_init();
 
@@ -44,11 +45,13 @@ void setup() {
   log_init();
   menu_init();
   input_setup();
+  output_setup();
   full_run_init();
   spark_test_init();
 }
 
-void inputs();
+extern void inputs();
+extern void outputs();
 
 void loop() {
    /*xxx*/ //delay(300);Serial.print("x");return;
@@ -56,4 +59,5 @@ void loop() {
  
   inputs();
   state_machine();
+  outputs();
 }
