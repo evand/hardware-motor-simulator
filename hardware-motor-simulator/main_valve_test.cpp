@@ -11,6 +11,7 @@
 #include "io_ref.h"
 #include "state.h"
 #include "menu.h"
+#include "buffer.h"
 
 extern LiquidCrystal lcd;
 
@@ -56,8 +57,11 @@ void main_valve_test_state(bool first_time) {
 	dipa = servo_read_ipa();
 	dn2o = servo_read_n2o();
 
+	buffer_zip();
+	buffer[8] = '\0';
+
 	lcd.setCursor(2, 12);
-	lcd.print("        ");
+	lcd.print(buffer);
 	lcd.setCursor(2, 12);
 	if (dipa == -1) 
 		lcd.print("OFF");
@@ -67,7 +71,7 @@ void main_valve_test_state(bool first_time) {
 		lcd.print(vipa);
 
 	lcd.setCursor(3, 12);
-	lcd.print("        ");
+	lcd.print(buffer);
 	lcd.setCursor(3, 12);
 	if (dn2o == -1) 
 		lcd.print("OFF");

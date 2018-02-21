@@ -10,6 +10,7 @@
 #include "io_ref.h"
 #include "state.h"
 #include "menu.h"
+#include "buffer.h"
 
 extern LiquidCrystal lcd;
 
@@ -47,8 +48,11 @@ void spark_test_state(bool first_time) {
 	lcd.setCursor(2, 13);
 	lcd.print(input_spark_sense? "SPARK ": "ABSENT");
 
+	buffer_zip();
+	buffer[8] = '\0';
+
 	lcd.setCursor(3, 13);
-	lcd.print("      ");
+	lcd.print(buffer);
 	lcd.setCursor(3, 13);
 	lcd.print(input_spark_sense_A);
 }

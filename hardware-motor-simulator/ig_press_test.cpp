@@ -9,6 +9,7 @@
 #include "io_ref.h"
 #include "state.h"
 #include "menu.h"
+#include "buffer.h"
 
 extern LiquidCrystal lcd;
 
@@ -45,8 +46,10 @@ void ig_press_test_state(bool first_time) {
 	// schedule next update.
 	next_update_time = loop_time + update_period;
 
+	buffer_zip();
+	buffer[6] = '\0';
 	lcd.setCursor(2, 14);
-	lcd.print("      ");
+	lcd.print(buffer);
 	lcd.setCursor(2, 14);
 	lcd.print(input_ig_press);
 
@@ -55,7 +58,7 @@ void ig_press_test_state(bool first_time) {
 		c = 0;
 	c = (c * 32768L) / 5000L;
 	lcd.setCursor(3, 14);
-	lcd.print("      ");
+	lcd.print(buffer);
 	lcd.setCursor(3, 14);
 	lcd.print(c);
 }
