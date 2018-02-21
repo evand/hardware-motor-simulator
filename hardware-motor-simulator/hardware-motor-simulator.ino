@@ -28,6 +28,7 @@ extern void input_setup();
 extern void output_setup();
 extern void full_run_init();
 extern void spark_test_init();
+extern void servo_setup();
 
 void setup() {
   Serial.begin(9600);
@@ -46,8 +47,7 @@ void setup() {
   menu_init();
   input_setup();
   output_setup();
-  full_run_init();
-  spark_test_init();
+  servo_setup();
 }
 
 extern void inputs();

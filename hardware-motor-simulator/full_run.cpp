@@ -10,9 +10,6 @@
 
 extern LiquidCrystal lcd;
 
-void full_run_init() {
-}
-
 void full_run_state(bool first_time) {
 /*xxx*/Serial.print("Full Run State\n"); delay(1000);
 	if (first_time)
