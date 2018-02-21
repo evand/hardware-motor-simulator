@@ -3,11 +3,11 @@ extern bool input_scroll_up;
 extern bool input_scroll_down;
 extern bool input_ig_valve_ipa;
 extern bool input_ig_valve_n2o;
-extern bool input_spark_sense;
 
 // device levels, rather than events
 extern bool input_ig_valve_ipa_level;
 extern bool input_ig_valve_n2o_level;
+extern bool input_spark_sense;
 extern int  input_spark_sense_A;	// analog value.  Used only in test routines.
 
 // These are the analog input values

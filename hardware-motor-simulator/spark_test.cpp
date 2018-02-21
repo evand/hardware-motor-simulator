@@ -13,10 +13,22 @@
 
 extern LiquidCrystal lcd;
 
+static unsigned long next_update_time;
+extern unsigned long loop_time;
+static unsigned long const update_period = 100;
+
 void spark_test_state(bool first_time) {
-/*xxx*/Serial.print("Spark Test State\n"); delay(1000);
-	if (first_time)
+/*xxx*/Serial.print("Spark Test State\n"); delay(100);
+	if (first_time) {
 		lcd.clear();
+		lcd.setCursor(0, 3);
+		lcd.print("Spark Test");
+		lcd.setCursor(2, 3);
+		lcd.print("Spark Sense:");
+		lcd.setCursor(3, 3);
+		lcd.print("Spark Value:");
+		next_update_time = 0;
+	}
 	
 	// Exit the test when the action button is pressed.
 	if (input_action_button) {
@@ -24,4 +36,17 @@ void spark_test_state(bool first_time) {
 		state_new(menu_state);
 		return;
 	}
+
+	// If not read to update, done.
+	if (loop_time < next_update_time)
+		return;
+
+	// schedule next update.
+	next_update_time = loop_time + update_period;
+
+	lcd.setCursor(2, 17);
+	lcd.print(input_spark_sense? "PRESENT": "ABSENT");
+
+	lcd.setCursor(3, 17);
+	lcd.print(input_spark_sense_A);
 }
