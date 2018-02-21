@@ -16,7 +16,7 @@
 #define	PIN_LCD_D4	7	// digital output
 #define	PIN_LCD_D5	8	// digital output
 #define	PIN_LCD_D6	9	// digital output
-#define	PIN_LCD_D8	10	// digital output
+#define	PIN_LCD_D7	10	// digital output
 #define	PIN_LCD_RS	11	// digital output
 #define	PIN_LCD_EN	12	// digital output
 #define	PIN_LED		13	// digital output

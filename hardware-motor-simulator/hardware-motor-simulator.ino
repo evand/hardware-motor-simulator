@@ -10,6 +10,7 @@
 #include "log.h"
 #include "state.h"
 #include "menu.h"
+#include "pins.h"
 
 /*
  * LCD Stuff
@@ -18,9 +19,7 @@
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
-const int rs = 11, en = 12, d4 = 7, d5 = 8, d6 = 9, d7 = 10;
-LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-const int backlight = 6;
+LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
 
 unsigned long loop_time;
 
@@ -37,8 +36,8 @@ void setup() {
   state_init();
   
   // Set up the LCD backlight
-  pinMode(backlight, OUTPUT);
-  analogWrite(backlight, 128);  // 50% power
+  pinMode(PIN_BACKLIGHT, OUTPUT);
+  analogWrite(PIN_BACKLIGHT, 128);  // 50% power
   
   // set up the LCD's number of columns and rows:
   lcd.begin(20, 4);
