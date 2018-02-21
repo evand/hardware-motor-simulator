@@ -27,9 +27,9 @@ void main_valve_test_state(bool first_time) {
 		lcd.clear();
 		lcd.setCursor(0, 3);
 		lcd.print("Main Valve Test");
-		lcd.setCursor(2, 3);
+		lcd.setCursor(2, 0);
 		lcd.print("IPA Valve:");
-		lcd.setCursor(3, 3);
+		lcd.setCursor(3, 0);
 		lcd.print("N2O Valve:");
 		next_update_time = 0;
 	}
@@ -56,23 +56,23 @@ void main_valve_test_state(bool first_time) {
 	dipa = servo_read_ipa();
 	dn2o = servo_read_n2o();
 
-	lcd.setCursor(2, 15);
-	lcd.print("            ");
-	lcd.setCursor(2, 15);
+	lcd.setCursor(2, 12);
+	lcd.print("        ");
+	lcd.setCursor(2, 12);
 	if (dipa == -1) 
 		lcd.print("OFF");
 	else if (dipa < 0 && dipa != -2)
-		lcd.print("unknown err");
+		lcd.print("error");
 	else
 		lcd.print(vipa);
 
-	lcd.setCursor(3, 15);
-	lcd.print("            ");
-	lcd.setCursor(3, 15);
+	lcd.setCursor(3, 12);
+	lcd.print("        ");
+	lcd.setCursor(3, 12);
 	if (dn2o == -1) 
 		lcd.print("OFF");
 	else if (dn2o < 0 && dn2o != -2)
-		lcd.print("unknown err");
+		lcd.print("error");
 	else
 		lcd.print(vn2o);
 }

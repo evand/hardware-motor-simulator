@@ -1,8 +1,7 @@
 /*
- * Test routine for ig valve input.
+ * Test routine for ig pressure input.
  *
- * This routine prints both ig valve states on LCD
- * Updates are limited to 10 per second, to avoid flickering.
+ * This routine prints both the raw and scaled ig pressure sensor value
  */
 
 #include <Arduino.h>
@@ -17,16 +16,18 @@ static unsigned long next_update_time;
 extern unsigned long loop_time;
 static unsigned long const update_period = 100;
 
-void ig_valve_test_state(bool first_time) {
-/*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
+void ip_press_test_state(bool first_time) {
+	long c;
+
+/*xxx*/Serial.print("Ig Pressure Test\n"); delay(100);
 	if (first_time) {
 		lcd.clear();
 		lcd.setCursor(0, 3);
-		lcd.print("Ig Valve Test");
+		lcd.print("Ig Pressure Test");
 		lcd.setCursor(2, 0);
-		lcd.print("IPA Valve:");
+		lcd.print("   Raw Value:");
 		lcd.setCursor(3, 0);
-		lcd.print("N2O Valve:");
+		lcd.print("Scaled Value:");
 		next_update_time = 0;
 	}
 	
@@ -44,9 +45,17 @@ void ig_valve_test_state(bool first_time) {
 	// schedule next update.
 	next_update_time = loop_time + update_period;
 
-	lcd.setCursor(2, 12);
-	lcd.print(input_ig_valve_ipa_level? "OPEN  ": "CLOSED");
+	lcd.setCursor(2, 14);
+	lcd.print("      ");
+	lcd.setCursor(2, 14);
+	lcd.print(input_ig_press);
 
-	lcd.setCursor(3, 12);
-	lcd.print(input_ig_valve_n2o_level? "OPEN  ": "CLOSED");
+	c = input_ig_press - 500;
+	if (c < 0)
+		c = 0;
+	c = (c * 32768L) / 5000L;
+	lcd.setCursor(3, 14);
+	lcd.print("      ");
+	lcd.setCursor(3, 14);
+	lcd.print(c);
 }
