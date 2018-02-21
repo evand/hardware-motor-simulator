@@ -5,10 +5,7 @@
 
 #include "Arduino.h"
 #include "io_ref.h"
-
-// Input Pins
-static const int ipa_servo = 2;
-static const int n2o_servo = 3;
+#include "pins.h"
 
 volatile int input_ipa_servo;		// pulse width in microseconds
 volatile int input_n2o_servo;
@@ -20,13 +17,13 @@ static bool n2o_valid;
 static long ipa_last_valid;
 static long n2o_last_valid;
 
-extern int loop_time;
+extern unsigned long loop_time;
 
 // ISR for IPA servo pin change
 static void ipa_isr() {
 	int d;
 
-	if (digitalRead(ipa_servo)) {
+	if (digitalRead(PIN_MAIN_IPA)) {
 		ipa_raise_time = micros();
 		ipa_valid = true;
 		return;
@@ -48,7 +45,7 @@ static void ipa_isr() {
 static void n2o_isr() {
 	int d;
 
-	if (digitalRead(n2o_servo)) {
+	if (digitalRead(PIN_MAIN_N2O)) {
 		n2o_raise_time = micros();
 		n2o_valid = true;
 		return;
@@ -67,14 +64,14 @@ static void n2o_isr() {
 }
 
 void servo_setup() {
-	pinMode(ipa_servo, INPUT);
-	pinMode(n2o_servo, INPUT);
+	pinMode(PIN_MAIN_IPA, INPUT);
+	pinMode(PIN_MAIN_N2O, INPUT);
 	ipa_valid = false;
 	n2o_valid = false;
 	ipa_last_valid = 0;
 	n2o_last_valid = 0;
-	attachInterrupt(digitalPinToInterrupt(ipa_servo), ipa_isr, CHANGE);
-	attachInterrupt(digitalPinToInterrupt(n2o_servo), n2o_isr, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(PIN_MAIN_IPA), ipa_isr, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(PIN_MAIN_N2O), n2o_isr, CHANGE);
 }
 
 

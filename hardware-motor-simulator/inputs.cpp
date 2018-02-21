@@ -16,7 +16,7 @@
  *	Will have to deal with this fact.  Or maybe the relays don't bounce.
  *
  * The two analog inputs are raw 10-bit values.
- *	These values are not filtered, we do add some simple hysterisis.
+ *	These values are not filtered, we do add some simple hysteresis.
  *	If the value read off the input A/D has not changed by +/- 3, we
  *	don't change the reported value.  This should provide some simple
  *	noise filtering.
@@ -35,16 +35,9 @@
 
 #include "Arduino.h"
 #include "io_ref.h"
+#include "pins.h"
 
 extern unsigned long loop_time;
-
-static const int action_button = A3;
-static const int scroll_switch = A6;
-static const int ig_valve_ipa = 5;	// QQQ XXX NOTE: These are almost certainly wrong.
-static const int ig_valve_n2o = 6;
-static const int main_press = A2;
-static const int ig_press = A3;
-static const int spark_sense = A1;
 
 // these are the events.  They are set true here, and set
 // false when consumed by the consumer
@@ -54,6 +47,10 @@ bool input_scroll_down;
 bool input_ig_valve_ipa;
 bool input_ig_valve_n2o;
 bool input_spark_sense;
+
+// These are the input levels.  Not events.  Read only outside this module.
+bool input_ig_valve_ipa_level;
+bool input_ig_valve_n2o_level;
 int  input_spark_sense_A;	// analog value.  Used only in test routines.
 
 // These are the analog input values.  They are set here only.
@@ -78,13 +75,13 @@ static bool ig_valve_n2o_old_state;
 // (none needed)
 
 const static unsigned long debounce_time = 10;	// milliseconds
-const static int hysterisis = 3;		// counts
+const static int hysteresis = 3;		// counts
 
 static void i_action_button() {
 	boolean v;
 
 	// v is true if the button is pressed
-	v = (digitalRead(action_button) == 0);
+	v = (digitalRead(PIN_ACTION) == 0);
 	
 	// Rising edge?
 	if (v && !action_button_old_state) {
@@ -109,7 +106,7 @@ static void i_scroll_switch() {
 	unsigned char v;
 
 	// v is true if switch pressed either way
-	t = analogRead(scroll_switch);
+	t = analogRead(PIN_SCROLL);
 	if (t < 10)
 		v = 1;
 	else if (t > 1000)
@@ -138,75 +135,72 @@ static void i_scroll_switch() {
 }
 
 static void i_ig_valve_ipa() {
-	boolean v;
 
-	// v is true if the solenoid is actuated
-	v = (digitalRead(ig_valve_ipa) == 0);
+	// true if the solenoid is actuated
+	input_ig_valve_ipa_level = (digitalRead(PIN_IG_IPA) == 0);
 
-	if (v && !ig_valve_ipa_old_state)
+	if (input_ig_valve_ipa_level  && !ig_valve_ipa_old_state)
 		input_ig_valve_ipa = true;
-	ig_valve_ipa_old_state = v;
+	ig_valve_ipa_old_state = input_ig_valve_ipa_level;
 }
 
 static void i_ig_valve_n2o() {
-	boolean v;
+	// true if the solenoid is actuated
+	input_ig_valve_n2o_level = (digitalRead(PIN_IG_N2O) == 0);
 
-	// v is true if the solenoid is actuated
-	v = (digitalRead(ig_valve_n2o) == 0);
-
-	if (v && !ig_valve_n2o_old_state)
+	if (input_ig_valve_n2o_level && !ig_valve_n2o_old_state)
 		input_ig_valve_n2o = true;
-	ig_valve_n2o_old_state = v;
+	ig_valve_n2o_old_state = input_ig_valve_n2o_level;
 }
 
 static void i_main_press() {
 	int v, t;
 
-	v = analogRead(main_press);
+	v = analogRead(PIN_MAIN_PRESS);
 	t = v - input_main_press;
-	if (t >= hysterisis || t <= -hysterisis)
+	if (t >= hysteresis || t <= -hysteresis)
 		input_main_press = v;
 }
 
 static void i_ig_press() {
 	int v, t;
 
-	v = analogRead(ig_press);
+	v = analogRead(PIN_IG_PRESS);
 	t = v - input_ig_press;
-	if (t >= hysterisis || t <= -hysterisis)
+	if (t >= hysteresis || t <= -hysteresis)
 		input_ig_press = v;
 }
 
 static void i_spark_sense() {
-	input_spark_sense_A = analogRead(spark_sense);
+	input_spark_sense_A = analogRead(PIN_SPARK);
 	input_spark_sense = (input_spark_sense_A < 300? false: true);
 }
 
 void input_setup() {
-	pinMode(action_button, INPUT_PULLUP);
+	pinMode(PIN_ACTION, INPUT_PULLUP);
 	action_button_old_state = false;
 	input_action_button = false;
 
-	pinMode(scroll_switch, INPUT);
+	pinMode(PIN_SCROLL, INPUT);
 	scroll_old_state = 0;
 	input_scroll_up = false;
 	input_scroll_down = false;
 
-	pinMode(ig_valve_ipa, INPUT);
+	pinMode(PIN_IG_IPA, INPUT);
 	ig_valve_ipa_old_state = false;
 	input_ig_valve_ipa = false;
 
-	pinMode(ig_valve_n2o, INPUT);
+	pinMode(PIN_IG_N2O, INPUT);
 	ig_valve_n2o_old_state = false;
 	input_ig_valve_n2o = false;
 
-	pinMode(main_press, INPUT);
+	pinMode(PIN_MAIN_PRESS, INPUT);
 	input_main_press = 0;
 
-	pinMode(ig_press, INPUT);
+	pinMode(PIN_IG_PRESS, INPUT);
 	input_ig_press = 0;
 
-	pinMode(spark_sense, INPUT);
+	pinMode(PIN_SPARK, INPUT);
 	input_spark_sense = 0;
 	input_spark_sense_A = 0;
 }
