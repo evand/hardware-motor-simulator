@@ -16,7 +16,7 @@ static unsigned long next_update_time;
 extern unsigned long loop_time;
 static unsigned long const update_period = 100;
 
-void ip_press_test_state(bool first_time) {
+void ig_press_test_state(bool first_time) {
 	long c;
 
 /*xxx*/Serial.print("Ig Pressure Test\n"); delay(100);
