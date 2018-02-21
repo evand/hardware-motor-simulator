@@ -8,6 +8,7 @@
 #include "state.h"
 #include "menu.h"
 #include "log.h"
+#include "buffer.h"
 
 extern LiquidCrystal lcd;
 
@@ -58,7 +59,9 @@ void log_review_state(bool first_time) {
 			p = log_tos_short(i + lr_min);
 		if (*p)
 			lcd.print(p);
-		else
-			lcd.print("                    ");
+		else {
+			buffer_zip_short();
+			lcd.print(buffer);
+		}
 	}
 }

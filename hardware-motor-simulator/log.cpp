@@ -17,6 +17,7 @@
 #include "log_op_names.h"
 #include "ee.h"
 #include "EEPROM.h"
+#include "buffer.h"
 
 extern unsigned long loop_time;
 static unsigned long log_base_time;
@@ -139,49 +140,6 @@ void log(unsigned char op, unsigned char param) {
  * 	in their name.
  */
 
-#define	LOG_STRING_SIZE		40
-#define	LOG_STRING_SHORT	20
-
-static char log_string[LOG_STRING_SIZE];
-
-static void i_zip() {
-	char i;
-
-	for (i = 0; i < LOG_STRING_SIZE-1; i++)
-		log_string[i] = ' ';
-	log_string[LOG_STRING_SIZE-1] = '\0';
-}
-
-/*
- * Print an unsigned int into the log.
- * 4 digits, fixed width, leading zeros suppressed
- */
-static void i_print_n_i(char col, int val) {
-	char i;
-
-	for (i = 3; i >= 0; i--) {
-		log_string[col + i] = '0' + (val % 10);
-		val /= 10;
-		if (val <= 0)
-			break;
-	}
-}
-
-/*
- * Print an unsigned char into the log.
- * 3 digits, fixed width, leading zeros suppressed
- */
-static void i_print_n_c(char col, unsigned char val) {
-	char i;
-
-	for (i = 2; i >= 0; i--) {
-		log_string[col + i] = '0' + (val % 10);
-		val /= 10;
-		if (val <= 0)
-			break;
-	}
-}
-
 /*
  * Very Dangerous String Copy routine
  */
@@ -193,13 +151,13 @@ static void i_strcpy(char *p, const char *q) {
  * Return the log sequence number as a printable string
  */
 char *log_tos_seqn() {
-	i_zip();
+	buffer_zip();
 
-	i_strcpy(log_string, "Log #:");
-	i_print_n_i(7, log_sequence_number);
+	i_strcpy(buffer, "Log #:");
+	buffer_print_n_i(7, log_sequence_number);
 
-	log_string[12] = '\0';
-	return log_string;
+	buffer[12] = '\0';
+	return buffer;
 }
 
 /*
@@ -209,9 +167,9 @@ static unsigned char i_log_tos(unsigned char entry) {
 	char bias;
 	char i;
 
-	i_zip();
+	buffer_zip();
 	if (entry >= n_log_entries) {
-		log_string[20] = '\0';
+		buffer[20] = '\0';
 		return 1;
 	}
 
@@ -221,17 +179,17 @@ static unsigned char i_log_tos(unsigned char entry) {
 			bias++;
 
 	if (bias > 9)
-		log_string[0] = '*';
+		buffer[0] = '*';
 	else if (bias)
-		log_string[0] = '0' + bias;
-	i_print_n_i(1, log_in_memory[entry].timestamp + (bias? 10000: 0));
+		buffer[0] = '0' + bias;
+	buffer_print_n_i(1, log_in_memory[entry].timestamp + (bias? 10000: 0));
 
 	return 0;
 }
 
 static void i_opcode_print(const char * const table[], unsigned char op) {
 	// Necessary casts and dereferencing, just copy.
-	strcpy_P(log_string + 6, (char*)pgm_read_word(&(table[op])));
+	strcpy_P(buffer + 6, (char*)pgm_read_word(&(table[op])));
 }
 
 /*
@@ -246,16 +204,16 @@ char *log_tos_short(unsigned char entry) {
 	unsigned char p;
 
 	if (i_log_tos(entry))
-		return log_string;
-	log_string[20] = '\0';
+		return buffer;
+	buffer[20] = '\0';
 
 	i_opcode_print(op_codes_short, (log_in_memory[entry].log_op) & ~LOG_LEVEL_MASK);
 
 	p = log_in_memory[entry].log_param;
 	if (p)
-		i_print_n_c(17, p);
+		buffer_print_n_c(17, p);
 
-	return log_string;
+	return buffer;
 }
 
 /*
@@ -270,14 +228,14 @@ char *log_tos_long(unsigned char entry) {
 	unsigned char p;
 
 	if (i_log_tos(entry))
-		return log_string;
-	log_string[30] = '\0';
+		return buffer;
+	buffer[30] = '\0';
 
 	i_opcode_print(op_codes_long, (log_in_memory[entry].log_op) & ~LOG_LEVEL_MASK);
 
 	p = log_in_memory[entry].log_param;
 	if (p)
-		i_print_n_c(27, p);
+		buffer_print_n_c(27, p);
 
-	return log_string;
+	return buffer;
 }

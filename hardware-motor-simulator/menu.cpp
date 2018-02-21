@@ -7,6 +7,7 @@
 #include "io_ref.h"
 #include <LiquidCrystal.h>
 #include "avr/pgmspace.h"
+#include "buffer.h"
 extern LiquidCrystal lcd;
 
 /*
@@ -61,8 +62,6 @@ void (*menu_state_functions[])(bool) = {
 
 static char menu_selection;	// which is the current menu item?
 
-static char print_buffer[21];
-
 /*
  * Clear the screen and then draw the menu.
  */
@@ -84,14 +83,14 @@ static void i_draw_menu()
 		if (min + i > max)
 			break;
 		for (j = 0; j < 20; j++)
-			print_buffer[j] = ' ';
-		print_buffer[j] = '\0';
+			buffer[j] = ' ';
+		buffer[j] = '\0';
 		// highlight the current menu selection
 		if (i + min == menu_selection)
-			print_buffer[0] = '*';
-		strcpy_P(print_buffer + 2, (char*)pgm_read_word(&(menu_table[i + min])));
+			buffer[0] = '*';
+		strcpy_P(buffer + 2, (char*)pgm_read_word(&(menu_table[i + min])));
 		lcd.setCursor(0, i);
-		lcd.print(print_buffer);
+		lcd.print(buffer);
 	}
 }
 
