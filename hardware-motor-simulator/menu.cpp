@@ -25,10 +25,11 @@ extern LiquidCrystal lcd;
 
 const char  m_0[] PROGMEM = "Full Run";
 const char  m_1[] PROGMEM = "Log Review";
-const char  m_2[] PROGMEM = "Spark Test";
-const char  m_3[] PROGMEM = "IG Valve Test";
-const char  m_4[] PROGMEM = "Main Valve Test";
-const char  m_5[] PROGMEM = "Ig Pressure Sensor";
+const char  m_2[] PROGMEM = "Log to Serial";
+const char  m_3[] PROGMEM = "Spark Test";
+const char  m_4[] PROGMEM = "IG Valve Test";
+const char  m_5[] PROGMEM = "Main Valve Test";
+const char  m_6[] PROGMEM = "Ig Pressure Sensor";
 
 const char * const menu_table[] PROGMEM = {
 		m_0,
@@ -37,6 +38,7 @@ const char * const menu_table[] PROGMEM = {
 		m_3,
 		m_4,
 		m_5,
+		m_6,
 };
 
 /*
@@ -44,6 +46,7 @@ const char * const menu_table[] PROGMEM = {
  */
 extern void full_run_state(bool);
 extern void log_review_state(bool);
+extern void log_to_serial(bool);
 extern void spark_test_state(bool);
 extern void ig_valve_test_state(bool);
 extern void main_valve_test_state(bool);
@@ -52,13 +55,14 @@ extern void ig_press_test_state(bool);
 void (*menu_state_functions[])(bool) = {
 	full_run_state,
 	log_review_state,
+	log_to_serial,
 	spark_test_state,
 	ig_valve_test_state,
 	main_valve_test_state,
 	ig_press_test_state,
 };
 
-#define	N_MENU_ITEMS	6
+#define	N_MENU_ITEMS	7
 
 static unsigned char menu_selection;	// which is the current menu item?
 

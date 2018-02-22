@@ -3,7 +3,7 @@
 char buffer[BUFFER_LEN];
 
 void buffer_zip() {
-	char i;
+	unsigned char i;
 
 	for (i = 0; i < BUFFER_LEN-1; i++)
 		buffer[i] = ' ';
@@ -11,7 +11,7 @@ void buffer_zip() {
 }
 
 void buffer_zip_short() {
-	char i;
+	unsigned char i;
 
 	for (i = 0; i < BUFFER_LEN_SHORT-1; i++)
 		buffer[i] = ' ';
