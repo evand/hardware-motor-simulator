@@ -60,15 +60,15 @@ void (*menu_state_functions[])(bool) = {
 
 #define	N_MENU_ITEMS	6
 
-static char menu_selection;	// which is the current menu item?
+static unsigned char menu_selection;	// which is the current menu item?
 
 /*
  * Clear the screen and then draw the menu.
  */
 static void i_draw_menu()
 {
-	char min, max;
-	char i, j;
+	unsigned char min, max;
+	unsigned char i;
 
 	lcd.clear();
 
@@ -82,9 +82,7 @@ static void i_draw_menu()
 	for (i = 0; i < 2; i++) {
 		if (min + i > max)
 			break;
-		for (j = 0; j < 20; j++)
-			buffer[j] = ' ';
-		buffer[j] = '\0';
+		buffer_zip_short();
 		// highlight the current menu selection
 		if (i + min == menu_selection)
 			buffer[0] = '*';

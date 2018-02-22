@@ -19,6 +19,8 @@
 #include "EEPROM.h"
 #include "buffer.h"
 
+bool log_enabled;
+
 extern unsigned long loop_time;
 static unsigned long log_base_time;
 static int n_log_entries;
@@ -33,6 +35,8 @@ void log_init() {
 	int cb2;
 	int i;
 	int p;
+
+	log_enabled = false;
 
 	log_sequence_number = EEPROM.read(LOG_SEQ0);
 	log_sequence_number |= ((unsigned int)(EEPROM.read(LOG_SEQ1)) << 8);
@@ -62,6 +66,10 @@ void log_commit() {
 	int cb2;
 	int i;
 	int p;
+
+	// If the in-memory log is empty, don't disturb the EEPROM version.
+	if (n_log_entries == 0)
+		return;
 
 	// make the log invalid
 	cb2 = EEPROM.read(LOG_CHECK_BYTE_2);
@@ -101,6 +109,9 @@ static void i_log(unsigned char op, unsigned char param)  {
 
 void log(unsigned char op, unsigned char param) {
 	int max;
+
+	if (!log_enabled)
+		return;
 
 	switch(LOG_LEVEL(op)) {
 		case LOG_CRITICAL:
@@ -144,7 +155,7 @@ void log(unsigned char op, unsigned char param) {
  * Very Dangerous String Copy routine
  */
 static void i_strcpy(char *p, const char *q) {
-	while (*p++ = *q++) ;
+	while ( (*p++ = *q++) ) ;
 }
 
 /*
@@ -164,12 +175,12 @@ char *log_tos_seqn() {
  * Put the timestamp into the long string
  */
 static unsigned char i_log_tos(unsigned char entry) {
-	char bias;
-	char i;
+	unsigned char bias;
+	unsigned char i;
 
 	buffer_zip();
 	if (entry >= n_log_entries) {
-		buffer[20] = '\0';
+		buffer[0] = '\0';
 		return 1;
 	}
 

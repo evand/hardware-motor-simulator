@@ -12,6 +12,8 @@
 // Log time is managed to ensure that timestamps can always fit in 16 bits
 #define	LOG_ROLLOVER_TIME	10000	// after this many milliseconds, rebase.
 
+extern bool log_enabled;	// set for full runs, clear for tests and such
+
 struct log_entry_s {
 	unsigned char log_op;		// see various #defines
 	unsigned char log_param;	// some op codes take a numeric parameter
@@ -54,11 +56,11 @@ struct log_entry_s {
 #define	LOG_IG_N2O_CLOSE	( 4 | LOG_NORMAL)
 #define	LOG_SPARK_FIRST		( 5 | LOG_CRITICAL)
 #define	LOG_SPARK_LAST		( 6 | LOG_NORMAL)
-#define	IG_PRESSURE_GOOD_1	( 7 | LOG_CRITICAL)	// first time ig pressure is good
-#define	IG_PRESSURE_GOOD	( 8 | LOG_NORMAL)		// second thru n'th time ig pressure is good
-#define	IG_PRESSURE_CHANGE	( 9 | LOG_DETAIL)		// any ig pressure change.  Param is 8 msb of pressure
-#define	MAIN_N2O_CHANGE		(10 | LOG_CRITICAL)	// N2O valve commanded to move; param is 8 msb of servo commanded position
-#define	MAIN_IPA_CHANGE		(11 | LOG_CRITICAL)
+#define	LOG_IG_PRESSURE_GOOD_1	( 7 | LOG_CRITICAL)	// first time ig pressure is good
+#define	LOG_IG_PRESSURE_GOOD	( 8 | LOG_NORMAL)		// second thru n'th time ig pressure is good
+#define	LOG_IG_PRESSURE_CHANGE	( 9 | LOG_DETAIL)		// any ig pressure change.  Param is 8 msb of pressure
+#define	LOG_MAIN_N2O_CHANGE	(10 | LOG_CRITICAL)	// N2O valve commanded to move; param is 8 msb of servo commanded position
+#define	LOG_MAIN_IPA_CHANGE	(11 | LOG_CRITICAL)
 #define	LOG_TIME_ROLLOVER	(12 | LOG_CRITICAL)
 
 /*

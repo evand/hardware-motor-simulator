@@ -26,6 +26,10 @@
  * 	debounced nor edge triggered.  It is set both true and false here.
  *
  * NOTE:
+ * 	Input status changes are logged here.  Whether they really go in the
+ * 	log is a function of the global boolean log_enabled
+ *
+ * NOTE:
  * 	Various thresholds are hard coded into the input routines.
  * 	This simplifies the code by not cluttering things with a bunch
  * 	of #defines that are used exactly once.  Read the code if you
@@ -36,6 +40,7 @@
 #include "Arduino.h"
 #include "io_ref.h"
 #include "pins.h"
+#include "log.h"
 
 extern unsigned long loop_time;
 
@@ -46,12 +51,14 @@ bool input_scroll_up;
 bool input_scroll_down;
 bool input_ig_valve_ipa;
 bool input_ig_valve_n2o;
-bool input_spark_sense;
 
 // These are the input levels.  Not events.  Read only outside this module.
+bool input_spark_sense;
 bool input_ig_valve_ipa_level;
 bool input_ig_valve_n2o_level;
 int  input_spark_sense_A;	// analog value.  Used only in test routines.
+int  input_servo_n2o;		// scaled to degrees
+int  input_servo_ipa;
 
 // These are the analog input values.  They are set here only.
 int  input_main_press;
@@ -139,8 +146,14 @@ static void i_ig_valve_ipa() {
 	// true if the solenoid is actuated
 	input_ig_valve_ipa_level = (digitalRead(PIN_IG_IPA) == 0);
 
-	if (input_ig_valve_ipa_level  && !ig_valve_ipa_old_state)
+	if (input_ig_valve_ipa_level  && !ig_valve_ipa_old_state) {
 		input_ig_valve_ipa = true;
+		log(LOG_IG_IPA_OPEN, 0);
+	}
+
+	if (!input_ig_valve_ipa_level  && ig_valve_ipa_old_state)
+		log(LOG_IG_IPA_CLOSE, 0);
+
 	ig_valve_ipa_old_state = input_ig_valve_ipa_level;
 }
 
@@ -148,11 +161,19 @@ static void i_ig_valve_n2o() {
 	// true if the solenoid is actuated
 	input_ig_valve_n2o_level = (digitalRead(PIN_IG_N2O) == 0);
 
-	if (input_ig_valve_n2o_level && !ig_valve_n2o_old_state)
+	if (input_ig_valve_n2o_level && !ig_valve_n2o_old_state) {
 		input_ig_valve_n2o = true;
+		log(LOG_IG_N2O_OPEN, 0);
+	}
+
+	if (!input_ig_valve_n2o_level  && ig_valve_n2o_old_state)
+		log(LOG_IG_N2O_CLOSE, 0);
+
 	ig_valve_n2o_old_state = input_ig_valve_n2o_level;
 }
 
+// the main pressure sensor isn't really in input.
+// this is always connected to the output of the DAC
 static void i_main_press() {
 	int v, t;
 
@@ -167,13 +188,41 @@ static void i_ig_press() {
 
 	v = analogRead(PIN_IG_PRESS);
 	t = v - input_ig_press;
-	if (t >= hysteresis || t <= -hysteresis)
+	if (t >= hysteresis || t <= -hysteresis) {
 		input_ig_press = v;
+		log(LOG_IG_PRESSURE_CHANGE, 0xff & (v >> 4));
+	}
 }
 
 static void i_spark_sense() {
+	bool b;
+
 	input_spark_sense_A = analogRead(PIN_SPARK);
-	input_spark_sense = (input_spark_sense_A < 300? false: true);
+	b = (input_spark_sense_A < 300? false: true);
+
+	if (b && !input_spark_sense)
+		log(LOG_SPARK_FIRST, 0);
+	else if (!b && input_spark_sense)
+		log(LOG_SPARK_LAST, 0);
+
+	input_spark_sense = b;
+}
+
+static void i_servo() {
+	extern volatile bool ipa_servo_change;
+	extern volatile bool n2o_servo_change;
+
+	if (ipa_servo_change) {
+		ipa_servo_change = false;
+		input_servo_ipa = servo_read_ipa();
+		log(LOG_MAIN_IPA_CHANGE, (0xff & input_servo_ipa));
+	}
+
+	if (n2o_servo_change) {
+		n2o_servo_change = false;
+		input_servo_n2o = servo_read_n2o();
+		log(LOG_MAIN_N2O_CHANGE, (0xff & input_servo_n2o));
+	}
 }
 
 void input_setup() {
@@ -213,4 +262,5 @@ void inputs() {
 	i_main_press();
 	i_ig_press();
 	i_spark_sense();
+	i_servo();
 }

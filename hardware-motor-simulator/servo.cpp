@@ -9,6 +9,8 @@
 
 volatile int input_ipa_servo;		// pulse width in microseconds
 volatile int input_n2o_servo;
+volatile bool ipa_servo_change;
+volatile bool n2o_servo_change;
 
 static long ipa_raise_time;
 static long n2o_raise_time;
@@ -37,6 +39,9 @@ static void ipa_isr() {
 	if (d <= 0)
 		return;
 
+	if (d != input_ipa_servo)
+		ipa_servo_change = true;
+
 	input_ipa_servo = d;
 	ipa_last_valid = micros();
 }
@@ -59,6 +64,9 @@ static void n2o_isr() {
 	if (d <= 0)
 		return;
 
+	if (d != input_n2o_servo)
+		n2o_servo_change = true;
+
 	input_n2o_servo = d;
 	n2o_last_valid = micros();
 }
@@ -70,6 +78,8 @@ void servo_setup() {
 	n2o_valid = false;
 	ipa_last_valid = 0;
 	n2o_last_valid = 0;
+	ipa_servo_change = true;
+	n2o_servo_change = true;
 	attachInterrupt(digitalPinToInterrupt(PIN_MAIN_IPA), ipa_isr, CHANGE);
 	attachInterrupt(digitalPinToInterrupt(PIN_MAIN_N2O), n2o_isr, CHANGE);
 }
