@@ -57,8 +57,10 @@ void log_review_state(bool first_time) {
 		}
 	}
 
-	if (first_time)
+	if (first_time) {
+		output_led = LED_ONE_SHOT;
 		i_draw();
+	}
 }
 
 void log_to_serial(bool first_time) {

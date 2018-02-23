@@ -10,6 +10,7 @@
 #include "state.h"
 #include "menu.h"
 #include "buffer.h"
+#include "dac.h"
 
 extern LiquidCrystal lcd;
 
@@ -50,15 +51,21 @@ void ig_press_test_state(bool first_time) {
 	buffer[6] = '\0';
 	lcd.setCursor(2, 14);
 	lcd.print(buffer);
-	lcd.setCursor(2, 14);
-	lcd.print(input_ig_press);
-
-	c = input_ig_press - 500;
-	if (c < 0)
-		c = 0;
-	c = (c * 32768L) / 5000L;
 	lcd.setCursor(3, 14);
 	lcd.print(buffer);
-	lcd.setCursor(3, 14);
-	lcd.print(c);
+
+	if (dac_ig_press_present()) {
+		lcd.setCursor(2, 14);
+		lcd.print(input_ig_press);
+
+		c = input_ig_press - 500;
+		if (c < 0)
+			c = 0;
+		c = (c * 32768L) / 5000L;
+		lcd.setCursor(3, 14);
+		lcd.print(c);
+	} else {
+		lcd.setCursor(2, 14);
+		lcd.print("N/A");
+	}
 }
