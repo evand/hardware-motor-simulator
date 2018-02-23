@@ -10,6 +10,10 @@
 #include "log.h"
 #include "dac.h"
 
+// amount of noise we put on simulated pressure traces.
+// Should be smaller than hysteresis value (3) in inputs.cpp
+#define	NOISE	2
+
 extern LiquidCrystal lcd;
 extern unsigned long loop_time;
 static unsigned long next_check_time;
@@ -18,12 +22,39 @@ static const unsigned long check_interval = 100; // milliseconds
 extern void running_state(bool);
 
 #define	NO_PRESSURE		409		// approx 0 PSI
+
 // 4096/10 + 75 * (8/10 * 4096) / 500
 #define	IG_PRESS_GOOD		900		// approx 75 PSI
+
 // 4096/10 + 150 * (8/10 * 4096) / 500
 #define	IG_PRESSURE_TARGET	1392		// approx 150 PSI
 
+// 4096 / 10 + 200 * (8/10 * 4096) / 500
+#define	MAX_MAIN_PRESSURE	1720		// approx 200 PSI
+
+#define	IG_DELAY		25		// igniter fires 25 ms after spark + propellants
+
+#define	PROPELLANT_LOAD		4000		// in 4 seconds of full throttle.  Units are ms.
+
+#define	N2O_SERVO_MIN		(44+5)		// degress.  Off.
+#define	N2O_SERVO_MAX		(N2O_SERVO_MIN + 170)
+#define	IPA_SERVO_MIN		(44+5)		// degress.  Off.
+#define	IPA_SERVO_MAX		(IPA_SERVO_MIN + 170)
+
 bool fr_sim_ig;		// true if we are simulating the igniter pressure sensor
+
+/*
+ * Common cleanup and state exit routine.
+ * Called either by input_action_button or by running out of fuel
+ */
+static void do_exit() {
+	input_action_button = false;
+	dac_set(DAC_MAIN, NO_PRESSURE);
+	log_enabled = false;
+	log_commit();
+	output_led = LED_OFF;
+	state_new(menu_state);
+}
 
 void full_run_state(bool first_time) {
 
@@ -35,6 +66,7 @@ void full_run_state(bool first_time) {
 		lcd.print("Full Run");
 		next_check_time = 0;
 		output_led = LED_ON;
+		dac_set(DAC_MAIN, NO_PRESSURE);
 	}
 
 	if (loop_time >= next_check_time) {
@@ -43,10 +75,8 @@ void full_run_state(bool first_time) {
 	}
 	
 	if (input_action_button) {
-		input_action_button = false;
-		log_commit();
-		log_enabled = false;
-		state_new(menu_state);
+		do_exit();
+		return;
 	}
 
 	if (first_time) {
@@ -104,8 +134,8 @@ static int sim_noise;
 
 static void sim_ig() {
 	sim_noise++;
-	if (sim_noise > 3)
-		sim_noise = -3;
+	if (sim_noise > NOISE)
+		sim_noise = -NOISE;
 
 	// avoid running too often
 	if (loop_time < sim_ig_next_update)
@@ -141,8 +171,9 @@ static void sim_ig() {
 	// If conditions are right, and have been for awhile, ig pressure up.
 	if (input_ig_valve_ipa_level && input_ig_valve_n2o_level && input_spark_sense) {
 		if (ig_good_time == 0)
-			ig_good_time = loop_time + 25;
+			ig_good_time = loop_time + IG_DELAY;
 		else if (loop_time >= ig_good_time) {
+			ig_good_time = 0;
 			sim_ig_changing = true;
 			sim_ig_increment = 300;	// come up to pressure in 5 ms ?
 			sim_ig_output_target = IG_PRESSURE_TARGET;
@@ -154,13 +185,110 @@ static void sim_ig() {
 		ig_good_time = 0;
 }
 
+/*
+ * Main chamber fires when propellants are present and igniter has been at pressure
+ * for some minimum time.
+ *
+ * Each servo is converted into a percentage.  The smaller percentage is used to scale
+ * the chamber pressure.
+ *
+ * Chamber running time is the integral of chamber pressure percentage.  System is loaded
+ * with a specified amount (in seconds) of propellants.
+ *
+ * When propellants run out, we exit to log review state.
+ */
+static unsigned int sim_main_next_update;
+static const unsigned long sim_main_interval = 1;
+static const unsigned int servo_slew_inv_rate = 2;	// 2 milliseconds to slew 1 degree
+static int ipa_servo_pos;
+static int n2o_servo_pos;
+static int ipa_pct;		// percent of full flow rate that the valve is open
+static int n2o_pct;		// percent of full flow rate that the valve is open
+static int ipa_level;		// amount of ipa we have left
+static int n2o_level;
+static int ipa_fractional_consumed;	// sum of pct each ms.
+static int n2o_fractional_consumed;
+
+// compute the simulated servo positions.
+// simulate the propellant flow rates
+static void servo_slew() {
+	int servo_target;
+
+	if (loop_time % servo_slew_inv_rate > 0)
+		return;
+
+	servo_target = servo_read_ipa();
+	if (servo_target > 0 && servo_target != ipa_servo_pos) {
+		if (servo_target > ipa_servo_pos)
+			ipa_servo_pos++;
+		else
+			ipa_servo_pos--;
+	}
+
+	servo_target = servo_read_n2o();
+	if (servo_target > 0 && servo_target != n2o_servo_pos) {
+		if (servo_target > n2o_servo_pos)
+			n2o_servo_pos++;
+		else
+			n2o_servo_pos--;
+	}
+}
+
 static void sim_main() {
+	int chamber_pct;
+	extern void log_review_state(bool);
+
+	// avoid running too often
+	if (loop_time < sim_main_next_update)
+		return;
+	sim_main_next_update = loop_time + sim_main_interval;
+
+	servo_slew();
+
+	if (ipa_servo_pos <= IPA_SERVO_MIN)
+		ipa_pct = 0;
+	else if (ipa_servo_pos >= IPA_SERVO_MAX)
+		ipa_pct = 100;
+	else {
+		ipa_pct = 100 * (ipa_servo_pos - IPA_SERVO_MIN) /
+			(IPA_SERVO_MAX - IPA_SERVO_MIN);
+	}
+
+	ipa_fractional_consumed += ipa_pct;
+	ipa_level -= ipa_fractional_consumed / 100;
+	ipa_fractional_consumed %= 100;
+
+	if (n2o_servo_pos <= N2O_SERVO_MIN)
+		n2o_pct = 0;
+	else if (n2o_servo_pos >= N2O_SERVO_MAX)
+		n2o_pct = 100;
+	else {
+		n2o_pct = 100 * (n2o_servo_pos - N2O_SERVO_MIN) /
+			(IPA_SERVO_MAX - IPA_SERVO_MIN);
+	}
+
+	n2o_fractional_consumed += n2o_pct;
+	n2o_level -= n2o_fractional_consumed / 100;
+	n2o_fractional_consumed %= 100;
+
+	if (n2o_level < 0 || ipa_level < 0) {
+		do_exit();
+		state_new(log_review_state);
+		return;
+	}
+
+	chamber_pct = min(n2o_pct, ipa_pct);
+	dac_set(DAC_MAIN, chamber_pct * MAX_MAIN_PRESSURE / 100);
 }
 
 /*
  * This state handles running the test.
  */
 void running_state(bool first_time) {
+	if (input_action_button) {
+		do_exit();
+		return;
+	}
 
 	if (first_time) {
 		output_led = LED_BLINKING;
@@ -170,6 +298,14 @@ void running_state(bool first_time) {
 		sim_ig_changing = false;
 		sim_ig_output = NO_PRESSURE;	// no pressure, but sensor present.
 		sim_ig_next_update = 0;
+
+		n2o_level = PROPELLANT_LOAD;
+		ipa_level = PROPELLANT_LOAD;
+		ipa_pct = 0;
+		ipa_fractional_consumed = 0;
+		n2o_pct = 0;
+		n2o_fractional_consumed = 0;
+		sim_main_next_update = 0;
 	}
 
 	if (fr_sim_ig)

@@ -14,7 +14,8 @@ const char  ss_8[] PROGMEM = "IG P Good";
 const char  ss_9[] PROGMEM = "IG Pressur";
 const char ss_10[] PROGMEM = "MN N2O Chg";
 const char ss_11[] PROGMEM = "MN IPA Chg";
-const char ss_12[] PROGMEM = "TIME Rollo";
+const char ss_12[] PROGMEM = "MAIN done";
+const char ss_13[] PROGMEM = "TIME Rollo";
 
 const char * const op_codes_short[] PROGMEM = {
 		ss_0,
@@ -30,6 +31,7 @@ const char * const op_codes_short[] PROGMEM = {
 		ss_10,
 		ss_11,
 		ss_12,
+		ss_13,
 };
 
 // long names, 20 chars max

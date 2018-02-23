@@ -61,7 +61,8 @@ struct log_entry_s {
 #define	LOG_IG_PRESSURE_CHANGE	( 9 | LOG_DETAIL)		// any ig pressure change.  Param is 8 msb of pressure
 #define	LOG_MAIN_N2O_CHANGE	(10 | LOG_CRITICAL)	// N2O valve commanded to move; param is 8 msb of servo commanded position
 #define	LOG_MAIN_IPA_CHANGE	(11 | LOG_CRITICAL)
-#define	LOG_TIME_ROLLOVER	(12 | LOG_CRITICAL)
+#define	LOG_MAIN_DONE		(12 | LOG_CRITICAL)	// out of fuel, simulation done
+#define	LOG_TIME_ROLLOVER	(13 | LOG_CRITICAL)
 
 /*
  * Entry points into log.cpp
