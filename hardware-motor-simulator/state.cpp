@@ -16,16 +16,20 @@
 
 static void (*current_state)(bool);
 static bool new_state;
+static bool next_state_is_new;
 
 void state_init() {
 	current_state = 0;
+	new_state = true;
+	next_state_is_new = false;
 }
 
 void state_machine() {
 /*xxx*/if (current_state && new_state) {Serial.print("Calling new state\n");delay(100);}
-	if (current_state)
+	if (current_state) 
 		current_state(new_state);
-	new_state = false;
+	new_state = next_state_is_new;
+	next_state_is_new = false;
 }
 
 
@@ -36,5 +40,5 @@ void state_new(void (*state_function)(bool)) {
 
 /*xxx*/Serial.print("Setting new new state\n");
 	current_state = state_function;
-	new_state = true;
+	next_state_is_new = true;
 }

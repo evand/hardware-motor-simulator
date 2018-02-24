@@ -7,17 +7,21 @@
 #include "io_ref.h"
 #include "pins.h"
 
+#define	SERVO_MIN	544UL
+#define	SERVO_MAX	2400UL
+#define	SERVO_ERROR	10UL
+
 volatile int input_ipa_servo;		// pulse width in microseconds
 volatile int input_n2o_servo;
 volatile bool ipa_servo_change;
 volatile bool n2o_servo_change;
 
-static long ipa_raise_time;
-static long n2o_raise_time;
-static bool ipa_valid;
-static bool n2o_valid;
-static long ipa_last_valid;
-static long n2o_last_valid;
+static unsigned long ipa_raise_time;
+static unsigned long n2o_raise_time;
+volatile bool ipa_valid;
+volatile bool n2o_valid;
+volatile unsigned long ipa_last_valid;
+volatile unsigned long n2o_last_valid;
 
 extern unsigned long loop_time;
 
@@ -91,40 +95,60 @@ void servo_setup() {
  */
 int servo_read_ipa() {
 	int l_micros;
-	int l_since;
-
-	l_since = loop_time - ipa_last_valid;
-
-	if (ipa_last_valid == 0 || l_since < 0 || l_since > 50)
-		return -1;
+	unsigned long l_since;
+	unsigned long v;
+	unsigned long m;
+	long t;
 
 	noInterrupts();
 	l_micros = input_ipa_servo;
+	v = ipa_last_valid;
 	interrupts();
+	m = micros();
+	l_since = m - v;
 
-	if (l_micros < 500 || l_micros > 1500)
+	if (v == 0 || l_since > 50000UL)
+		return -1;
+
+	if (l_micros < SERVO_MIN - SERVO_ERROR || l_micros > SERVO_MAX + SERVO_ERROR)
 		return -2;
 
-	// (l_micros - 500) * 180/1000
-	return (l_micros - 500) * 9 / 50;
+	if (l_micros < SERVO_MIN)
+		l_micros = SERVO_MIN;
+
+	if (l_micros > SERVO_MAX)
+		l_micros = SERVO_MAX;
+
+	t = (((long)l_micros - SERVO_MIN) * 180UL) / (SERVO_MAX-SERVO_MIN);
+	return t;
 }
 
 int servo_read_n2o() {
 	int l_micros;
-	int l_since;
-
-	l_since = loop_time - n2o_last_valid;
-
-	if (n2o_last_valid == 0 || l_since < 0 || l_since > 50)
-		return -1;
+	unsigned long l_since;
+	unsigned long v;
+	unsigned long m;
+	long t;
 
 	noInterrupts();
 	l_micros = input_n2o_servo;
+	v = n2o_last_valid;
 	interrupts();
+	m = micros();
+	l_since = m - v;
 
-	if (l_micros < 500 || l_micros > 1500)
+	if (v == 0 || l_since > 50000UL)
+		return -1;
+
+	if (l_micros < SERVO_MIN - SERVO_ERROR || l_micros > SERVO_MAX + SERVO_ERROR)
 		return -2;
 
-	// (l_micros - 500) * 180/1000
-	return (l_micros - 500) * 9 / 50;
+	if (l_micros < SERVO_MIN)
+		l_micros = SERVO_MIN;
+
+	if (l_micros > SERVO_MAX)
+		l_micros = SERVO_MAX;
+
+	t = (((long)l_micros - SERVO_MIN) * 180UL) / (SERVO_MAX-SERVO_MIN);
+	return t;
 }

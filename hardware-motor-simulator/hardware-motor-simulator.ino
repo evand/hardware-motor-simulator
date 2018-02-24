@@ -43,6 +43,7 @@ void setup() {
   
   // set up the LCD's number of columns and rows:
   lcd.begin(20, 4);
+  loop_counter = 0;
 
   log_init();
   menu_init();

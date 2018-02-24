@@ -10,8 +10,8 @@
 #define	PIN_TX		1	// not used.
 #define	PIN_MAIN_N2O	2	// PWM/interrupt input
 #define	PIN_MAIN_IPA	3	// PWM/interrupt input
-#define	PIN_IG_N2O	4	// digital input
-#define	PIN_IG_IPA	5	// digital input
+#define	PIN_IG_IPA	4	// digital input
+#define	PIN_IG_N2O	5	// digital input
 #define	PIN_BACKLIGHT	6	// PWM output
 #define	PIN_LCD_D4	7	// digital output
 #define	PIN_LCD_D5	8	// digital output

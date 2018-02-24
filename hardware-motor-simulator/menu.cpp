@@ -10,6 +10,8 @@
 #include "buffer.h"
 extern LiquidCrystal lcd;
 
+#define	N_MENU_LINES	4
+
 /*
  * Each menu item is a string of up to 18 characters
  * and a state function.
@@ -79,11 +81,15 @@ static void i_draw_menu()
 	min = 0;
 	if (menu_selection > 0)
 		min = menu_selection - 1;
-	max = N_MENU_ITEMS - 1;
-	if (menu_selection < max)
-		max = menu_selection + 1;
+	max - min + N_MENU_LINES;
+	if (max >= N_MENU_ITEMS) {
+		max = N_MENU_ITEMS - 1;
+#if N_MENU_ITEMS >= N_MENU_LINES
+		min = max - N_MENU_LINES;
+#endif
+	}
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < N_MENU_LINES; i++) {
 		if (min + i > max)
 			break;
 		buffer_zip_short();

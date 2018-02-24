@@ -9,6 +9,7 @@
 #include "menu.h"
 #include "log.h"
 #include "dac.h"
+#include "pressure.h"
 
 // amount of noise we put on simulated pressure traces.
 // Should be smaller than hysteresis value (3) in inputs.cpp
@@ -20,17 +21,6 @@ static unsigned long next_check_time;
 static unsigned long test_start_time;
 static const unsigned long check_interval = 100; // milliseconds
 extern void running_state(bool);
-
-#define	NO_PRESSURE		409		// approx 0 PSI
-
-// 4096/10 + 75 * (8/10 * 4096) / 500
-#define	IG_PRESS_GOOD		900		// approx 75 PSI
-
-// 4096/10 + 150 * (8/10 * 4096) / 500
-#define	IG_PRESSURE_TARGET	1392		// approx 150 PSI
-
-// 4096 / 10 + 200 * (8/10 * 4096) / 500
-#define	MAX_MAIN_PRESSURE	1720		// approx 200 PSI
 
 #define	IG_DELAY		25		// igniter fires 25 ms after spark + propellants
 
@@ -58,8 +48,8 @@ static void do_exit() {
 
 void full_run_state(bool first_time) {
 
-/*xxx*/Serial.print("Full Run State\n"); delay(1000);
 	if (first_time) {
+/*xxx*/Serial.print("Full Run State\n"); delay(1000);
 		log_reset();
 		log_enabled = true;
 		lcd.clear();
@@ -81,12 +71,12 @@ void full_run_state(bool first_time) {
 
 	if (first_time) {
 		fr_sim_ig = !dac_ig_press_present();
-		lcd.setCursor(0, 1);
+		lcd.setCursor(1, 0);
 		if (fr_sim_ig) {
 			lcd.print("Simulated Ignitor");
 			dac_set(DAC_IG, NO_PRESSURE);
 		} else
-			lcd.print("Real Igniter");
+			lcd.print("Real Igniter     ");
 	}
 
 	if (input_ig_valve_ipa_level || input_ig_valve_n2o_level || input_spark_sense)

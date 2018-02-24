@@ -19,14 +19,14 @@ extern unsigned long loop_time;
 static unsigned long const update_period = 100;
 
 void spark_test_state(bool first_time) {
-/*xxx*/Serial.print("Spark Test State\n"); delay(100);
 	if (first_time) {
+/*xxx*/Serial.print("Spark Test State\n"); delay(100);
 		lcd.clear();
-		lcd.setCursor(0, 3);
-		lcd.print("Spark Test");
-		lcd.setCursor(2, 0);
-		lcd.print("Spark Sense:");
 		lcd.setCursor(3, 0);
+		lcd.print("Spark Test");
+		lcd.setCursor(0, 2);
+		lcd.print("Spark Sense:");
+		lcd.setCursor(0, 2);
 		lcd.print("Spark Value:");
 		next_update_time = 0;
 	}
@@ -45,14 +45,14 @@ void spark_test_state(bool first_time) {
 	// schedule next update.
 	next_update_time = loop_time + update_period;
 
-	lcd.setCursor(2, 13);
+	lcd.setCursor(13, 2);
 	lcd.print(input_spark_sense? "SPARK ": "ABSENT");
 
 	buffer_zip();
 	buffer[8] = '\0';
 
-	lcd.setCursor(3, 13);
+	lcd.setCursor(13, 3);
 	lcd.print(buffer);
-	lcd.setCursor(3, 13);
+	lcd.setCursor(13, 3);
 	lcd.print(input_spark_sense_A);
 }

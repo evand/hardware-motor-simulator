@@ -18,14 +18,14 @@ extern unsigned long loop_time;
 static unsigned long const update_period = 100;
 
 void ig_valve_test_state(bool first_time) {
-/*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
 	if (first_time) {
+/*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
 		lcd.clear();
-		lcd.setCursor(0, 3);
-		lcd.print("Ig Valve Test");
-		lcd.setCursor(2, 0);
-		lcd.print("IPA Valve:");
 		lcd.setCursor(3, 0);
+		lcd.print("Ig Valve Test");
+		lcd.setCursor(0, 2);
+		lcd.print("IPA Valve:");
+		lcd.setCursor(0, 3);
 		lcd.print("N2O Valve:");
 		next_update_time = 0;
 	}
@@ -44,9 +44,9 @@ void ig_valve_test_state(bool first_time) {
 	// schedule next update.
 	next_update_time = loop_time + update_period;
 
-	lcd.setCursor(2, 12);
+	lcd.setCursor(12, 2);
 	lcd.print(input_ig_valve_ipa_level? "OPEN  ": "CLOSED");
 
-	lcd.setCursor(3, 12);
+	lcd.setCursor(12, 3);
 	lcd.print(input_ig_valve_n2o_level? "OPEN  ": "CLOSED");
 }

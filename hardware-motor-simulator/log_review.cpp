@@ -35,9 +35,9 @@ static void i_draw() {
 }
 
 void log_review_state(bool first_time) {
-/*xxx*/Serial.print("Log Review\n"); delay(100);
 
 	if (first_time) {
+/*xxx*/Serial.print("Log Review\n"); delay(100);
 		lr_min = -1;
 	}
 

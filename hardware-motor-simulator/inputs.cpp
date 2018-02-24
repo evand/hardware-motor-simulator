@@ -144,7 +144,7 @@ static void i_scroll_switch() {
 static void i_ig_valve_ipa() {
 
 	// true if the solenoid is actuated
-	input_ig_valve_ipa_level = (digitalRead(PIN_IG_IPA) == 0);
+	input_ig_valve_ipa_level = (digitalRead(PIN_IG_IPA) == 1);
 
 	if (input_ig_valve_ipa_level  && !ig_valve_ipa_old_state) {
 		input_ig_valve_ipa = true;
@@ -159,7 +159,7 @@ static void i_ig_valve_ipa() {
 
 static void i_ig_valve_n2o() {
 	// true if the solenoid is actuated
-	input_ig_valve_n2o_level = (digitalRead(PIN_IG_N2O) == 0);
+	input_ig_valve_n2o_level = (digitalRead(PIN_IG_N2O) == 1);
 
 	if (input_ig_valve_n2o_level && !ig_valve_n2o_old_state) {
 		input_ig_valve_n2o = true;

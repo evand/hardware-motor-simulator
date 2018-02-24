@@ -11,6 +11,7 @@
 #include "menu.h"
 #include "buffer.h"
 #include "dac.h"
+#include "pressure.h"
 
 extern LiquidCrystal lcd;
 
@@ -21,14 +22,14 @@ static unsigned long const update_period = 100;
 void ig_press_test_state(bool first_time) {
 	long c;
 
-/*xxx*/Serial.print("Ig Pressure Test\n"); delay(100);
 	if (first_time) {
+/*xxx*/Serial.print("Ig Pressure Test\n"); delay(100);
 		lcd.clear();
-		lcd.setCursor(0, 3);
-		lcd.print("Ig Pressure Test");
-		lcd.setCursor(2, 0);
-		lcd.print("   Raw Value:");
 		lcd.setCursor(3, 0);
+		lcd.print("Ig Pressure Test");
+		lcd.setCursor(0, 2);
+		lcd.print("   Raw Value:");
+		lcd.setCursor(0, 3);
 		lcd.print("Scaled Value:");
 		next_update_time = 0;
 	}
@@ -49,23 +50,22 @@ void ig_press_test_state(bool first_time) {
 
 	buffer_zip();
 	buffer[6] = '\0';
-	lcd.setCursor(2, 14);
+	lcd.setCursor(14, 2);
 	lcd.print(buffer);
-	lcd.setCursor(3, 14);
+	lcd.setCursor(14, 3);
 	lcd.print(buffer);
 
+	lcd.setCursor(14, 2);
 	if (dac_ig_press_present()) {
-		lcd.setCursor(2, 14);
 		lcd.print(input_ig_press);
 
-		c = input_ig_press - 500;
+		c = input_ig_press - SENSOR_ZERO;
 		if (c < 0)
 			c = 0;
-		c = (c * 32768L) / 5000L;
-		lcd.setCursor(3, 14);
+		c = (c * (unsigned long)PSI_RANGE * 10L) / ((unsigned long)(SENSOR_MAX-SENSOR_ZERO));
+		lcd.setCursor(14, 3);
 		lcd.print(c);
 	} else {
-		lcd.setCursor(2, 14);
-		lcd.print("N/A");
+		lcd.print("N/C");
 	}
 }

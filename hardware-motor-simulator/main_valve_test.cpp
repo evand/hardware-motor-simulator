@@ -17,20 +17,19 @@ extern LiquidCrystal lcd;
 
 static unsigned long next_update_time;
 extern unsigned long loop_time;
-static unsigned long const update_period = 100;
+static unsigned long const update_period = 200;
 
 void main_valve_test_state(bool first_time) {
 	int vipa, vn2o;
 	int dipa, dn2o;
 
-/*xxx*/Serial.print("Main Valve Test State\n"); delay(100);
 	if (first_time) {
 		lcd.clear();
-		lcd.setCursor(0, 3);
-		lcd.print("Main Valve Test");
-		lcd.setCursor(2, 0);
-		lcd.print("IPA Valve:");
 		lcd.setCursor(3, 0);
+		lcd.print("Main Valve Test");
+		lcd.setCursor(0, 2);
+		lcd.print("IPA Valve:");
+		lcd.setCursor(0, 3);
 		lcd.print("N2O Valve:");
 		next_update_time = 0;
 	}
@@ -60,22 +59,22 @@ void main_valve_test_state(bool first_time) {
 	buffer_zip();
 	buffer[8] = '\0';
 
-	lcd.setCursor(2, 12);
+	lcd.setCursor(12, 2);
 	lcd.print(buffer);
-	lcd.setCursor(2, 12);
+	lcd.setCursor(12, 2);
 	if (dipa == -1) 
-		lcd.print("OFF");
-	else if (dipa < 0 && dipa != -2)
+		lcd.print("N/C");
+	else if (dipa == -2)
 		lcd.print("error");
 	else
 		lcd.print(vipa);
 
-	lcd.setCursor(3, 12);
+	lcd.setCursor(12, 3);
 	lcd.print(buffer);
-	lcd.setCursor(3, 12);
+	lcd.setCursor(12, 3);
 	if (dn2o == -1) 
-		lcd.print("OFF");
-	else if (dn2o < 0 && dn2o != -2)
+		lcd.print("N/C");
+	else if (dn2o == -2)
 		lcd.print("error");
 	else
 		lcd.print(vn2o);
