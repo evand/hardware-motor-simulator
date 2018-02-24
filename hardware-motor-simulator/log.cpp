@@ -22,6 +22,7 @@
 bool log_enabled;
 
 extern unsigned long loop_time;
+extern unsigned long loop_counter;
 static unsigned long log_base_time;
 static int n_log_entries;
 struct log_entry_s log_in_memory[LOG_SIZE];	// the in-memory copy of the log
@@ -130,6 +131,7 @@ void log(unsigned char op, unsigned char param) {
 	
 	if (n_log_entries == 0) {
 		log_base_time = loop_time;
+		loop_counter = 0;
 		i_log(LOG_START, 0);
 	}
 

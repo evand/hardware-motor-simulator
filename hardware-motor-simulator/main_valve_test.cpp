@@ -23,7 +23,7 @@ void main_valve_test_state(bool first_time) {
 	int vipa, vn2o;
 	int dipa, dn2o;
 
-/*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
+/*xxx*/Serial.print("Main Valve Test State\n"); delay(100);
 	if (first_time) {
 		lcd.clear();
 		lcd.setCursor(0, 3);

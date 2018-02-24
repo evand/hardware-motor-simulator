@@ -22,6 +22,7 @@
 LiquidCrystal lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
 
 unsigned long loop_time;
+unsigned long loop_counter;
 
 extern void input_setup();
 extern void output_setup();
@@ -55,8 +56,8 @@ extern void inputs();
 extern void outputs();
 
 void loop() {
-   /*xxx*/ //delay(300);Serial.print("x");return;
   loop_time = millis();
+  loop_counter++;
  
   inputs();
   state_machine();
