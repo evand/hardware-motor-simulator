@@ -26,6 +26,7 @@ void state_init() {
 
 void state_machine() {
 /*xxx*/if (current_state && new_state) {Serial.print("Calling new state\n");delay(100);}
+	new_state_is_new = false;
 	if (current_state) 
 		current_state(new_state);
 	new_state = next_state_is_new;
@@ -41,4 +42,5 @@ void state_new(void (*state_function)(bool)) {
 /*xxx*/Serial.print("Setting new new state\n");
 	current_state = state_function;
 	next_state_is_new = true;
+	new_state = true;
 }
