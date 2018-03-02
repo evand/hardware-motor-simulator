@@ -18,6 +18,7 @@
 #include "ee.h"
 #include "EEPROM.h"
 #include "buffer.h"
+#include "Arduino.h"
 
 bool log_enabled;
 
@@ -104,7 +105,7 @@ void log_reset() {
 static void i_log(unsigned char op, unsigned char param)  {
 	log_in_memory[n_log_entries].log_op = op;
 	log_in_memory[n_log_entries].log_param = param;
-	log_in_memory[n_log_entries].timestamp = loop_time;
+	log_in_memory[n_log_entries].timestamp = loop_time - log_base_time;
 	n_log_entries++;
 }
 
@@ -123,6 +124,8 @@ void log(unsigned char op, unsigned char param) {
 			break;
 		default:
 			max = LOG_MAX_DETAIL;
+			if (n_log_entries == 0)
+				return;		// don't clutter before things start
 			break;
 	}
 
@@ -200,9 +203,18 @@ static unsigned char i_log_tos(unsigned char entry) {
 	return 0;
 }
 
+/*
+ * NOTE: DOES NOT NULL TERMINATE
+ */
 static void i_opcode_print(const char * const table[], unsigned char op) {
+	char *p;
+
 	// Necessary casts and dereferencing, just copy.
-	strcpy_P(buffer + 6, (char*)pgm_read_word(&(table[op])));
+	p = buffer + 6;
+	strcpy_P(p, (char*)pgm_read_word(&(table[op])));
+	while (*p)
+		p++;
+	*p = ' ';
 }
 
 /*
@@ -223,6 +235,7 @@ char *log_tos_short(unsigned char entry) {
 	i_opcode_print(op_codes_short, (log_in_memory[entry].log_op) & ~LOG_LEVEL_MASK);
 
 	p = log_in_memory[entry].log_param;
+/*xxx*/Serial.print("op = "); Serial.print((int)(log_in_memory[entry].log_op)); Serial.print(" p = ");Serial.print((int)(p)); Serial.print("\n");
 	if (p)
 		buffer_print_n_c(17, p);
 

@@ -6,7 +6,7 @@
 // This is intended as part of the bring-up of the P2 Motor Simulator hardware
 //
 
-#define DAC_ADDR  0x61  // https://www.sparkfun.com/products/12918
+#define DAC_ADDR  0x60  // https://www.sparkfun.com/products/12918
 #define LED 13
 
 // Init the DAC to zero volts.  Set DAC to send zero volts on power up.
@@ -19,14 +19,20 @@ void dac_init() {
   Wire.endTransmission();
 }
 
-// This routine sets the output voltage on the DAC using a 12-bit number.
+// This routine sets the output voltage on both DACs using a 12-bit number.
 // This does not affect the power-up voltage of the DAC
 // 0 = 0V.
 // 4095 = VCC (5.0 volts)
 
 void dac_set(int val) {
-  //return;
   Wire.beginTransmission(DAC_ADDR);
+  Wire.write(0x40);                  // cmd to update the DAC
+  Wire.write(val >> 4);              // the 8 most significant bits...
+  Wire.write((val & 0x0f) << 4);     // the 4 least significant bits...
+  Wire.endTransmission();
+
+  // hit the other DAC
+  Wire.beginTransmission(DAC_ADDR | 1);
   Wire.write(0x40);                  // cmd to update the DAC
   Wire.write(val >> 4);              // the 8 most significant bits...
   Wire.write((val & 0x0f) << 4);     // the 4 least significant bits...

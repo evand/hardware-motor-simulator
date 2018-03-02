@@ -3,4 +3,5 @@
 
 extern void dac_setup();
 extern void dac_set(int dac, int val);
+extern void dac_set10(int dac, int val);
 extern bool dac_ig_press_present();

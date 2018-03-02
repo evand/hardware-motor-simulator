@@ -40,6 +40,14 @@
 #define	IDLE_MAIN	410	// 4096 / 10 => 0.5 volts, idle state of sensor
 
 /*
+ * This routine sets the DAC using a 10-bit number.  Handy because input pressures
+ * are 10-bits
+ */
+void dac_set10(int dac, int val) {
+	dac_set(dac, val<<2);
+}
+
+/*
  * This routine sets the output voltage on the DAC using a 12-bit number.
  * This does not affect the power-up voltage of the DAC
  * 0 = 0V.

@@ -37,8 +37,13 @@ static void i_draw() {
 void log_review_state(bool first_time) {
 
 	if (first_time) {
-/*xxx*/Serial.print("Log Review\n"); delay(100);
 		lr_min = -1;
+	}
+
+	if (input_action_button)  {
+		input_action_button = false;
+		output_led = LED_OFF;
+		state_new(menu_state);
 	}
 
 	if (input_scroll_up) {
@@ -64,7 +69,6 @@ void log_review_state(bool first_time) {
 }
 
 void log_to_serial(bool first_time) {
-/*xxx*/Serial.print("Log to Serial\n"); delay(100);
 	char *p;
 	
 	// Exit back to the menu when the action button is pressed.

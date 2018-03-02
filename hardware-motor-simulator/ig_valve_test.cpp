@@ -19,7 +19,6 @@ static unsigned long const update_period = 100;
 
 void ig_valve_test_state(bool first_time) {
 	if (first_time) {
-/*xxx*/Serial.print("Ig Valve Test State\n"); delay(100);
 		lcd.clear();
 		lcd.setCursor(3, 0);
 		lcd.print("Ig Valve Test");

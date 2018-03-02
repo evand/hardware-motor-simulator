@@ -23,7 +23,6 @@ void ig_press_test_state(bool first_time) {
 	long c;
 
 	if (first_time) {
-/*xxx*/Serial.print("Ig Pressure Test\n"); delay(100);
 		lcd.clear();
 		lcd.setCursor(3, 0);
 		lcd.print("Ig Pressure Test");

@@ -39,7 +39,7 @@ bool fr_sim_ig;		// true if we are simulating the igniter pressure sensor
  */
 static void do_exit() {
 	input_action_button = false;
-	dac_set(DAC_MAIN, NO_PRESSURE);
+	dac_set10(DAC_MAIN, NO_PRESSURE);
 	log_enabled = false;
 	log_commit();
 	output_led = LED_OFF;
@@ -49,18 +49,18 @@ static void do_exit() {
 void full_run_state(bool first_time) {
 
 	if (first_time) {
-/*xxx*/Serial.print("Full Run State\n"); delay(1000);
 		log_reset();
 		log_enabled = true;
 		lcd.clear();
 		lcd.print("Full Run");
 		next_check_time = 0;
 		output_led = LED_ON;
-		dac_set(DAC_MAIN, NO_PRESSURE);
+		dac_set10(DAC_MAIN, NO_PRESSURE);
 	}
 
 	if (loop_time >= next_check_time) {
-		first_time = true;
+		// disable this feature for now
+		// first_time = true;
 		next_check_time = loop_time + check_interval;
 	}
 	
@@ -71,10 +71,10 @@ void full_run_state(bool first_time) {
 
 	if (first_time) {
 		fr_sim_ig = !dac_ig_press_present();
-		lcd.setCursor(1, 0);
+		lcd.setCursor(0, 1);
 		if (fr_sim_ig) {
 			lcd.print("Simulated Ignitor");
-			dac_set(DAC_IG, NO_PRESSURE);
+			dac_set10(DAC_IG, NO_PRESSURE);
 		} else
 			lcd.print("Real Igniter     ");
 	}
@@ -147,7 +147,7 @@ static void sim_ig() {
 			}
 		}
 	}
-	dac_set(DAC_IG, sim_ig_output + sim_noise);
+	dac_set10(DAC_IG, sim_ig_output + sim_noise);
 
 	// If any of the valves are off, kill the ig pressure
 	if ((!input_ig_valve_ipa_level || !input_ig_valve_n2o_level) &&
@@ -226,6 +226,7 @@ static void servo_slew() {
 
 static void sim_main() {
 	int chamber_pct;
+	int p;
 	extern void log_review_state(bool);
 
 	// avoid running too often
@@ -268,7 +269,8 @@ static void sim_main() {
 	}
 
 	chamber_pct = min(n2o_pct, ipa_pct);
-	dac_set(DAC_MAIN, chamber_pct * MAX_MAIN_PRESSURE / 100);
+	p = chamber_pct * (MAX_MAIN_PRESSURE-SENSOR_ZERO) / 100 + SENSOR_ZERO;
+	dac_set10(DAC_MAIN, p);
 }
 
 /*

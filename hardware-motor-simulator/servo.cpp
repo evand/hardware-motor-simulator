@@ -10,6 +10,7 @@
 #define	SERVO_MIN	544UL
 #define	SERVO_MAX	2400UL
 #define	SERVO_ERROR	10UL
+#define MIN_CHANGE	8		// minimum change that we ignore.  Min possible change is 4 uSec
 
 volatile int input_ipa_servo;		// pulse width in microseconds
 volatile int input_n2o_servo;
@@ -28,6 +29,7 @@ extern unsigned long loop_time;
 // ISR for IPA servo pin change
 static void ipa_isr() {
 	int d;
+	int c;
 
 	if (digitalRead(PIN_MAIN_IPA)) {
 		ipa_raise_time = micros();
@@ -42,17 +44,19 @@ static void ipa_isr() {
 	ipa_valid = false;
 	if (d <= 0)
 		return;
-
-	if (d != input_ipa_servo)
+	
+	c = d - input_ipa_servo;
+	if (c > MIN_CHANGE || c < -MIN_CHANGE) {
 		ipa_servo_change = true;
-
-	input_ipa_servo = d;
+		input_ipa_servo = d;
+	}
 	ipa_last_valid = micros();
 }
 
 // ISR for N2O servo pin change
 static void n2o_isr() {
 	int d;
+	int c;
 
 	if (digitalRead(PIN_MAIN_N2O)) {
 		n2o_raise_time = micros();
@@ -67,11 +71,12 @@ static void n2o_isr() {
 	n2o_valid = false;
 	if (d <= 0)
 		return;
-
-	if (d != input_n2o_servo)
+	
+	c = d - input_n2o_servo;
+	if (c > MIN_CHANGE || c < -MIN_CHANGE) {
 		n2o_servo_change = true;
-
-	input_n2o_servo = d;
+		input_n2o_servo = d;
+	}
 	n2o_last_valid = micros();
 }
 

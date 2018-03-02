@@ -82,7 +82,7 @@ static bool ig_valve_n2o_old_state;
 // (none needed)
 
 const static unsigned long debounce_time = 10;	// milliseconds
-const static int hysteresis = 3;		// counts
+const static int hysteresis = 10;		// counts
 
 static void i_action_button() {
 	boolean v;
@@ -179,8 +179,11 @@ static void i_main_press() {
 
 	v = analogRead(PIN_MAIN_PRESS);
 	t = v - input_main_press;
-	if (t >= hysteresis || t <= -hysteresis)
+	if (t >= hysteresis || t <= -hysteresis) {
 		input_main_press = v;
+		// Don't log this.  Not worth it
+		// log(LOG_MAIN_PRESSURE_CHANGE, 0xff & (v >> 2));
+	}
 }
 
 static void i_ig_press() {
@@ -190,7 +193,7 @@ static void i_ig_press() {
 	t = v - input_ig_press;
 	if (t >= hysteresis || t <= -hysteresis) {
 		input_ig_press = v;
-		log(LOG_IG_PRESSURE_CHANGE, 0xff & (v >> 4));
+		log(LOG_IG_PRESSURE_CHANGE, 0xff & (v >> 2));
 	}
 }
 
@@ -198,7 +201,7 @@ static void i_spark_sense() {
 	bool b;
 
 	input_spark_sense_A = analogRead(PIN_SPARK);
-	b = (input_spark_sense_A < 300? false: true);
+	b = (input_spark_sense_A > 100 && input_spark_sense_A < 900);
 
 	if (b && !input_spark_sense)
 		log(LOG_SPARK_FIRST, 0);
