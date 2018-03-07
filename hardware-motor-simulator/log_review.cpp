@@ -87,8 +87,9 @@ void log_to_serial(bool first_time) {
 	if (lr_min < 0)
 		p = log_tos_seqn();
 	else
-		p = log_tos_long(lr_min);
+		p = log_tos_long((unsigned char)lr_min);
 	lr_min++;
+	/*xxx*/Serial.print(" -- ");Serial.print(lr_min);Serial.print("\n");
 
 	if (*p) {
 		Serial.print(p);

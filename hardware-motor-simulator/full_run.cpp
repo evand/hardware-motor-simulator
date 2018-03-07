@@ -27,9 +27,9 @@ extern void running_state(bool);
 #define	PROPELLANT_LOAD		4000		// in 4 seconds of full throttle.  Units are ms.
 
 #define	N2O_SERVO_MIN		(44+5)		// degress.  Off.
-#define	N2O_SERVO_MAX		(N2O_SERVO_MIN + 170)
+#define	N2O_SERVO_MAX		(N2O_SERVO_MIN + 80)
 #define	IPA_SERVO_MIN		(44+5)		// degress.  Off.
-#define	IPA_SERVO_MAX		(IPA_SERVO_MIN + 170)
+#define	IPA_SERVO_MAX		(IPA_SERVO_MIN + 80)
 
 bool fr_sim_ig;		// true if we are simulating the igniter pressure sensor
 
@@ -187,9 +187,10 @@ static void sim_ig() {
  *
  * When propellants run out, we exit to log review state.
  */
-static unsigned int sim_main_next_update;
+static unsigned long sim_main_next_update;
 static const unsigned long sim_main_interval = 1;
 static const unsigned int servo_slew_inv_rate = 2;	// 2 milliseconds to slew 1 degree
+static unsigned long last_servo_update_time;
 static int ipa_servo_pos;
 static int n2o_servo_pos;
 static int ipa_pct;		// percent of full flow rate that the valve is open
@@ -199,30 +200,48 @@ static int n2o_level;
 static int ipa_fractional_consumed;	// sum of pct each ms.
 static int n2o_fractional_consumed;
 
+static void servo_slew_init() {
+	last_servo_update_time = loop_time;
+}
+
 // compute the simulated servo positions.
 // simulate the propellant flow rates
 static void servo_slew() {
 	int servo_target;
+	int d;
 
-	if (loop_time % servo_slew_inv_rate > 0)
-		return;
+	d = (loop_time - last_servo_update_time) / servo_slew_inv_rate;
+	last_servo_update_time += d * servo_slew_inv_rate;
 
 	servo_target = servo_read_ipa();
 	if (servo_target > 0 && servo_target != ipa_servo_pos) {
-		if (servo_target > ipa_servo_pos)
-			ipa_servo_pos++;
-		else
-			ipa_servo_pos--;
+		if (servo_target > ipa_servo_pos) {
+			ipa_servo_pos += d;
+			if (ipa_servo_pos > servo_target)
+				ipa_servo_pos = servo_target;
+		} else {
+			ipa_servo_pos -= d;
+			if (ipa_servo_pos < servo_target)
+				ipa_servo_pos = servo_target;
+		}
 	}
 
 	servo_target = servo_read_n2o();
 	if (servo_target > 0 && servo_target != n2o_servo_pos) {
-		if (servo_target > n2o_servo_pos)
-			n2o_servo_pos++;
-		else
-			n2o_servo_pos--;
+		if (servo_target > n2o_servo_pos) {
+			n2o_servo_pos += d;
+			if (n2o_servo_pos > servo_target)
+				n2o_servo_pos = servo_target;
+		} else {
+			n2o_servo_pos -= d;
+			if (n2o_servo_pos < servo_target)
+				n2o_servo_pos = servo_target;
+		}
 	}
 }
+
+static int old_chamber_pct;
+static unsigned long last_main_log_time;
 
 static void sim_main() {
 	int chamber_pct;
@@ -269,6 +288,15 @@ static void sim_main() {
 	}
 
 	chamber_pct = min(n2o_pct, ipa_pct);
+	if (chamber_pct == old_chamber_pct)
+		return;
+	old_chamber_pct = chamber_pct;
+
+	if (loop_time - last_main_log_time > 12) {
+		log(LOG_MAIN_PCT, (unsigned char)chamber_pct);
+		last_main_log_time = loop_time;
+	}
+
 	p = chamber_pct * (MAX_MAIN_PRESSURE-SENSOR_ZERO) / 100 + SENSOR_ZERO;
 	dac_set10(DAC_MAIN, p);
 }
@@ -298,6 +326,9 @@ void running_state(bool first_time) {
 		n2o_pct = 0;
 		n2o_fractional_consumed = 0;
 		sim_main_next_update = 0;
+		last_main_log_time = 0;
+		servo_slew_init();
+		old_chamber_pct = 0;
 	}
 
 	if (fr_sim_ig)

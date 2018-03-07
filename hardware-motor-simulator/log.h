@@ -5,9 +5,9 @@
 /*
  * NOTE: code assume that LOG_SIZE+1 fits in an 8-bit integer
  */
-#define	LOG_SIZE	100	// no more than 100 entries are stored
-#define	LOG_MAX_NORMAL	LOG_SIZE - 10
-#define	LOG_MAX_DETAIL	LOG_MAX_NORMAL - 10
+#define	LOG_SIZE	100	// no more than 200 entries are stored
+#define	LOG_MAX_NORMAL	LOG_SIZE - 20
+#define	LOG_MAX_DETAIL	LOG_MAX_NORMAL - 20
 
 // Log time is managed to ensure that timestamps can always fit in 16 bits
 #define	LOG_ROLLOVER_TIME	10000	// after this many milliseconds, rebase.
@@ -62,7 +62,8 @@ struct log_entry_s {
 #define	LOG_MAIN_N2O_CHANGE	(10 | LOG_CRITICAL)	// N2O valve commanded to move; param is 8 msb of servo commanded position
 #define	LOG_MAIN_IPA_CHANGE	(11 | LOG_CRITICAL)
 #define	LOG_MAIN_DONE		(12 | LOG_CRITICAL)	// out of fuel, simulation done
-#define	LOG_TIME_ROLLOVER	(13 | LOG_CRITICAL)
+#define	LOG_MAIN_PCT		(13 | LOG_NORMAL)	// pct of full chamber pressure
+#define	LOG_TIME_ROLLOVER	(14 | LOG_CRITICAL)
 
 /*
  * Entry points into log.cpp

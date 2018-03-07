@@ -15,7 +15,8 @@ const char  ss_9[] PROGMEM = "IG Pressur";
 const char ss_10[] PROGMEM = "MN N2O Chg";
 const char ss_11[] PROGMEM = "MN IPA Chg";
 const char ss_12[] PROGMEM = "MAIN done";
-const char ss_13[] PROGMEM = "TIME Rollo";
+const char ss_13[] PROGMEM = "MAIN PCT";
+const char ss_14[] PROGMEM = "TIME Rollo";
 
 const char * const op_codes_short[] PROGMEM = {
 		ss_0,
@@ -32,6 +33,7 @@ const char * const op_codes_short[] PROGMEM = {
 		ss_11,
 		ss_12,
 		ss_13,
+		ss_14,
 };
 
 // long names, 20 chars max
@@ -48,7 +50,9 @@ const char  ls_8[] PROGMEM = "IG Press Good";
 const char  ls_9[] PROGMEM = "IG Pressure Value";
 const char ls_10[] PROGMEM = "MAIN N2O Servo";
 const char ls_11[] PROGMEM = "MAIN IPA Servo";
-const char ls_12[] PROGMEM = "TIME Rollover";
+const char ls_12[] PROGMEM = "MAIN DONE";
+const char ls_13[] PROGMEM = "MAIN Chamber PCT";
+const char ls_14[] PROGMEM = "TIME Rollover";
 
 const char * const op_codes_long[] PROGMEM = {
 		ls_0,

@@ -81,11 +81,11 @@ static void i_draw_menu()
 	min = 0;
 	if (menu_selection > 0)
 		min = menu_selection - 1;
-	max = min + N_MENU_LINES;
+	max = min + N_MENU_LINES - 1;
 	if (max >= N_MENU_ITEMS) {
 		max = N_MENU_ITEMS - 1;
 #if N_MENU_ITEMS >= N_MENU_LINES
-		min = max - N_MENU_LINES;
+		min = max - N_MENU_LINES + 1;
 #endif
 	}
 
