@@ -31,7 +31,17 @@ extern void running_state(bool);
 #define	IPA_SERVO_MIN		(44+5)		// degress.  Off.
 #define	IPA_SERVO_MAX		(IPA_SERVO_MIN + 80)
 
+//chamber behavior parameters: permit things like no/low pressure on main chamber startup,
+//or failure to reach full pressure when main valves open fully
+#define CHAMBER_EFF		100		// relative pressure
+#define CHAMBER_MAX_PCT		100		// max pressure percentage
+
+//igniter failure modes
+#define IG_LIGHT		true
+#define IG_STAY_LIT		true
+
 bool fr_sim_ig;		// true if we are simulating the igniter pressure sensor
+int chamber_p;		// simulated chamber pressure
 
 /*
  * Common cleanup and state exit routine.
@@ -40,6 +50,8 @@ bool fr_sim_ig;		// true if we are simulating the igniter pressure sensor
 static void do_exit() {
 	input_action_button = false;
 	dac_set10(DAC_MAIN, NO_PRESSURE);
+	if (fr_sim_ig)
+		dac_set10(DAC_IG, NO_PRESSURE);
 	log_enabled = false;
 	log_commit();
 	output_led = LED_OFF;
@@ -116,12 +128,17 @@ static void monitor_ig() {
  */
 static unsigned long sim_ig_next_update;
 static const unsigned long sim_ig_interval = 1;
-static bool sim_ig_changing;
 static int sim_ig_output;
 static int sim_ig_increment;
 static int sim_ig_output_target;
 static int sim_noise;
 
+//General behavior:
+//Igniter normally lights after a delay if alcohol, nitrous, and spark are present (IG_LIGHT).
+//Igniter normally stays lit if alcohol and nitrous are present (IG_STAY_LIT).
+//Igniter pressure is always >= chamber pressure. Igniter is lit if there is pressure.
+//(AKA igniter will relight from the chamber.)
+//Igniter pressure is slew limited and very slightly noisy.
 static void sim_ig() {
 	sim_noise++;
 	if (sim_noise > NOISE)
@@ -133,46 +150,48 @@ static void sim_ig() {
 	sim_ig_next_update = loop_time + sim_ig_interval;
 
 	// If we are changing the output signal, do so gradually.
-	if (sim_ig_changing) {
+	if (sim_ig_output < sim_ig_output_target) {
 		sim_ig_output += sim_ig_increment;
-		if (sim_ig_increment > 0) {
-			if (sim_ig_output >= sim_ig_output_target) {
-				sim_ig_output = sim_ig_output_target;
-				sim_ig_changing = false;
-			}
-		} else {
-			if (sim_ig_output <= sim_ig_output_target) {
-				sim_ig_output = sim_ig_output_target;
-				sim_ig_changing = false;
-			}
+		if (sim_ig_output >= sim_ig_output_target) {
+			sim_ig_output = sim_ig_output_target;
+		}
+	}
+	if (sim_ig_output > sim_ig_output_target) {
+		sim_ig_output -= sim_ig_increment;
+		if (sim_ig_output <= sim_ig_output_target) {
+			sim_ig_output = sim_ig_output_target;
 		}
 	}
 	dac_set10(DAC_IG, sim_ig_output + sim_noise);
 
 	// If any of the valves are off, kill the ig pressure
-	if ((!input_ig_valve_ipa_level || !input_ig_valve_n2o_level) &&
-			( sim_ig_output > NO_PRESSURE ||
-			  sim_ig_output_target > NO_PRESSURE)) {
-		sim_ig_changing = true;
+	if ((!input_ig_valve_ipa_level || !input_ig_valve_n2o_level) {
 		sim_ig_output_target = NO_PRESSURE;
-		sim_ig_increment = -500;	// I just made this up.
 	}
 
 	// If conditions are right, and have been for awhile, ig pressure up.
-	if (input_ig_valve_ipa_level && input_ig_valve_n2o_level && input_spark_sense) {
+	if (input_ig_valve_ipa_level && input_ig_valve_n2o_level
+			&& (input_spark_sense || (chamber_p > NO_PRESSURE + 10))
+			&& IG_LIGHT) {
 		if (ig_good_time == 0)
 			ig_good_time = loop_time + IG_DELAY;
 		else if (loop_time >= ig_good_time) {
 			ig_good_time = 0;
-			sim_ig_changing = true;
-			sim_ig_increment = 300;	// come up to pressure in 5 ms ?
 			sim_ig_output_target = IG_PRESSURE_TARGET;
 		}
 	}
 
 	// If conditions are not right for ignition, don't let it start
-	if (!input_ig_valve_ipa_level || !input_ig_valve_n2o_level || !input_spark_sense)
+	if (!input_ig_valve_ipa_level || !input_ig_valve_n2o_level || !input_spark_sense) {
 		ig_good_time = 0;
+		if (!IG_STAY_LIT) {
+			sim_ig_output_target = NO_PRESSURE;
+		}
+	}
+
+
+	if (sim_ig_output_target < chamber_p)
+		sim_ig_output_target = chamber_p;
 }
 
 /*
@@ -186,6 +205,10 @@ static void sim_ig() {
  * with a specified amount (in seconds) of propellants.
  *
  * When propellants run out, we exit to log review state.
+ *
+ * Chamber pressure has efficiency (CHAMBER_EFF) and max (CHAMBER_MAX_PCT) parameters.
+ * These can be used to simulate things like no ignition (CHAMBER_EFF low, maybe 5%?),
+ * or other odd behavior.
  */
 static unsigned long sim_main_next_update;
 static const unsigned long sim_main_interval = 1;
@@ -245,7 +268,7 @@ static unsigned long last_main_log_time;
 
 static void sim_main() {
 	int chamber_pct;
-	int p;
+	//int p;
 	extern void log_review_state(bool);
 
 	// avoid running too often
@@ -287,7 +310,8 @@ static void sim_main() {
 		return;
 	}
 
-	chamber_pct = min(n2o_pct, ipa_pct);
+	chamber_pct = (CHAMBER_EFF * min(n2o_pct, ipa_pct)) / 100;
+	chamber_pct = max(chamber_pct, CHAMBER_MAX_PCT);
 	if (chamber_pct == old_chamber_pct)
 		return;
 	old_chamber_pct = chamber_pct;
@@ -297,8 +321,8 @@ static void sim_main() {
 		last_main_log_time = loop_time;
 	}
 
-	p = chamber_pct * (MAX_MAIN_PRESSURE-SENSOR_ZERO) / 100 + SENSOR_ZERO;
-	dac_set10(DAC_MAIN, p);
+	chamber_p = chamber_pct * (MAX_MAIN_PRESSURE - SENSOR_ZERO) / 100 + SENSOR_ZERO;
+	dac_set10(DAC_MAIN, chamber_p);
 }
 
 /*
@@ -315,7 +339,6 @@ void running_state(bool first_time) {
 		test_start_time = loop_time;
 		ig_pressure_good = false;
 		ig_pressure_has_been_good = false;
-		sim_ig_changing = false;
 		sim_ig_output = NO_PRESSURE;	// no pressure, but sensor present.
 		sim_ig_next_update = 0;
 
@@ -329,6 +352,8 @@ void running_state(bool first_time) {
 		last_main_log_time = 0;
 		servo_slew_init();
 		old_chamber_pct = 0;
+		chamber_p = NO_PRESSURE;
+		sim_ig_increment = 150;	//igniter pressure normally changes rapidly
 	}
 
 	if (fr_sim_ig)
