@@ -26,5 +26,5 @@ extern unsigned char output_led;
 #define	LED_BLINKING	3
 #define	LED_CONTINUE	4	// internal state, never set to this.
 
-extern int servo_read_n2o();	// returns -1 or servo angle in degrees.
-extern int servo_read_ipa();	// returns -1 or servo angle in degrees.
+extern unsigned char servo_read_n2o();	// returns -1, -2 or servo angle in degrees.
+extern unsigned char servo_read_ipa();	// returns -1, -2 or servo angle in degrees.

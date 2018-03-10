@@ -170,6 +170,7 @@ char *log_tos_seqn() {
 	buffer_zip();
 
 	i_strcpy(buffer, "Log #:");
+	buffer[6] = ' ';
 	buffer_print_n_i(7, log_sequence_number);
 
 	buffer[12] = '\0';

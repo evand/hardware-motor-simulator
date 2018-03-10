@@ -57,8 +57,6 @@ bool input_spark_sense;
 bool input_ig_valve_ipa_level;
 bool input_ig_valve_n2o_level;
 int  input_spark_sense_A;	// analog value.  Used only in test routines.
-int  input_servo_n2o;		// scaled to degrees
-int  input_servo_ipa;
 
 // These are the analog input values.  They are set here only.
 int  input_main_press;
@@ -211,23 +209,6 @@ static void i_spark_sense() {
 	input_spark_sense = b;
 }
 
-static void i_servo() {
-	extern volatile bool ipa_servo_change;
-	extern volatile bool n2o_servo_change;
-
-	if (ipa_servo_change) {
-		ipa_servo_change = false;
-		input_servo_ipa = servo_read_ipa();
-		log(LOG_MAIN_IPA_CHANGE, (0xff & input_servo_ipa));
-	}
-
-	if (n2o_servo_change) {
-		n2o_servo_change = false;
-		input_servo_n2o = servo_read_n2o();
-		log(LOG_MAIN_N2O_CHANGE, (0xff & input_servo_n2o));
-	}
-}
-
 void input_setup() {
 	pinMode(PIN_ACTION, INPUT_PULLUP);
 	action_button_old_state = false;
@@ -265,5 +246,4 @@ void inputs() {
 	i_main_press();
 	i_ig_press();
 	i_spark_sense();
-	i_servo();
 }

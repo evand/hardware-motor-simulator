@@ -165,7 +165,7 @@ static void sim_ig() {
 	dac_set10(DAC_IG, sim_ig_output + sim_noise);
 
 	// If any of the valves are off, kill the ig pressure
-	if ((!input_ig_valve_ipa_level || !input_ig_valve_n2o_level) {
+	if (!input_ig_valve_ipa_level || !input_ig_valve_n2o_level) {
 		sim_ig_output_target = NO_PRESSURE;
 	}
 
